@@ -48,7 +48,7 @@ class CameraPreview extends StatelessWidget {
             Orientation.landscape)) ? 0 : deviceOrientation.turns;
 
     return RotatedBox(
-      quarterTurns: quarterTurns,
+      quarterTurns: 0,
       child: child,
     );
   }
