@@ -20,23 +20,35 @@ class CameraPreview extends StatelessWidget {
     return ValueListenableBuilder<MobileScannerState>(
       valueListenable: controller,
       builder: (BuildContext context, MobileScannerState value, Widget? child) {
+        final orientation = MediaQuery
+            .of(context)
+            .orientation;
+
         return SizedBox.fromSize(
           size:
-              value.deviceOrientation.isLandscape
-                  ? value.size.flipped
-                  : value.size,
-          child: _wrapInRotatedBox(child: controller.buildCameraView()),
+          orientation == Orientation.landscape
+              ? value.size.flipped
+              : value.size,
+          child: _wrapInRotatedBox(flutterOrientation: orientation,
+            child: controller.buildCameraView(),),
         );
       },
     );
   }
 
-  Widget _wrapInRotatedBox({required Widget child}) {
+  Widget _wrapInRotatedBox(
+      {required Widget child, required Orientation flutterOrientation,}) {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       return child;
     }
+
+    final deviceOrientation = controller.value.deviceOrientation;
+    final quarterTurns = (deviceOrientation.isLandscape !=
+        (flutterOrientation ==
+            Orientation.landscape)) ? 0 : deviceOrientation.turns;
+
     return RotatedBox(
-      quarterTurns: controller.value.deviceOrientation.turns,
+      quarterTurns: quarterTurns,
       child: child,
     );
   }
@@ -48,14 +60,15 @@ extension on DeviceOrientation {
   /// Returns `true` if the device orientation is landscape (horizontal).
   bool get isLandscape =>
       this == DeviceOrientation.landscapeLeft ||
-      this == DeviceOrientation.landscapeRight;
+          this == DeviceOrientation.landscapeRight;
 
   /// Maps the different device orientations to quarter turns that the
   /// preview should take in account.
-  int get turns => switch (this) {
-    DeviceOrientation.portraitUp => 0,
-    DeviceOrientation.landscapeRight => 1,
-    DeviceOrientation.portraitDown => 2,
-    DeviceOrientation.landscapeLeft => 3,
-  };
+  int get turns =>
+      switch (this) {
+        DeviceOrientation.portraitUp => 0,
+        DeviceOrientation.landscapeRight => 1,
+        DeviceOrientation.portraitDown => 2,
+        DeviceOrientation.landscapeLeft => 3,
+      };
 }
